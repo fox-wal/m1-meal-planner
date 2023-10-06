@@ -59,6 +59,7 @@ _italics_ = extension
         3. Add steps
             1. Add individually
             2. _State duration for each one_
+        4. Add tags
     3. Add/edit units
         1. Enter name
         2. Enter symbol
