@@ -3,7 +3,7 @@ from unit import Unit
 DEFAULT_AMOUNT = 1
 NO_UNIT = Unit("no unit", "x")
 
-class Unit_amount:
+class UnitAmount:
     _unit: Unit
     _amount: float
 
