@@ -1,9 +1,13 @@
-#
-# MEAL PLANNER
-#
+#==============#
+# MEAL PLANNER #
+#==============#
 
-from recipe import recipe
+from recipe import Recipe
 from enum import Enum
+
+#                   #
+# Generic Functions #
+#                   #
 
 # Display an error message.
 def print_error(error_message: str):
@@ -25,7 +29,7 @@ def display_menu(menu: list[str]):
 # Prompt the user to enter an integer to select an item from a menu until they
 # enter a valid number.
 # >> Return: the index selected, or -1 if the user entered "X".
-def user_selects_item_from_menu(menu_size: int) -> int:
+def user_selects_menu_item(menu_size: int) -> int:
     EXIT_CHAR = "X"
     EXIT_VALUE = -1
 
@@ -62,60 +66,38 @@ def user_selects_item_from_menu(menu_size: int) -> int:
         #     print_error(ERROR_GENERIC)
     return selection - 1
 
-MAIN_MENU = [
-    "View recipes",
-    "Add/edit recipe",
-    "Add/edit units",
-    "View meal plans",
-    "Create/edit meal plan",
-]
+#--------------#
+# View Recipes #
+#--------------#
 
-#
-# Display Main Menu
-#
-def display_main_menu():
-    display_menu(MAIN_MENU)
-    choice = user_selects_item_from_menu(MAIN_MENU.__len__())
-    if choice != -1:
-        # TODO: Go to the appropriate place
-        print(f"[{MAIN_MENU[choice]}] selected.")
-    else:
-        print("Exiting...")
+# Add the index of each recipe that satisfies the given filter condition to a list.
+# >> Returns: list of indexes of recipes that satisfy the given filter condition.
+def filter_recipes(recipes: list[Recipe], check_fits_filter: function(Recipe)) -> list[int]:
+    filtered_recipe_indexes = []
+    for i in range(recipes.__len__()):
+        if check_fits_filter(recipes[i]):
+            filtered_recipe_indexes.append(i)
 
-#
-# View Recipes
-#
-
-# Display the names of all the recipes, subject to the filter conditions.
-def display_recipes(recipes: list, filter_condition: function(recipe) = None) -> bool:
-    if recipes.__len__() == 0:
-        return False
-
-    recipes_have_been_displayed = True
-
-    # Check if there is a filter. If not, we can save some time by not checking
-    # whether it's met in each iteration.
-    if filter_condition is None:
-        for recipe in recipes:
-            print(recipe.get_name())
-    else:
-        recipes_have_been_displayed = False
-        for recipe in recipes:
-            if filter_condition(recipe):
-                print(recipe.get_name())
-                recipes_have_been_displayed = True
-        return recipes_have_been_displayed
-
-class filter_conditions(Enum):
+class Filter_conditions(Enum):
     CONTAINS_TAGS_UNION = 0,
     CONTAINS_TAGS_INTERSECT = 1,
-    CONTAINS_KEYWORDS_UNION = 2, # Use 'or' in condition checking
-    CONTAINS_KEYWORDS_INTERSECT = 3, # Use 'and' in condition checking
+    CONTAINS_KEYWORDS_UNION = 2,
+    CONTAINS_KEYWORDS_INTERSECT = 3,
     DURATION_LESS_THAN = 4
 
 all_tags: list[str]
 
-def check_contains_tags(recipe: recipe, tags: list[str], union: bool = True) -> bool:
+def load_files(path: str):
+    # TODO: write file loading function
+    load_recipes()
+    pass
+
+def load_recipes() -> list[Recipe]:
+    # TODO: write recipe loading function
+    RECIPE_PATH = "recipes.json"
+    pass
+
+def check_contains_tags(recipe: Recipe, tags: list[str], union: bool = True) -> bool:
     contains_at_least_one_tag = False
     contains_all_tags = True
     for tag in tags:
@@ -125,7 +107,7 @@ def check_contains_tags(recipe: recipe, tags: list[str], union: bool = True) -> 
             contains_all_tags = False
     return contains_all_tags or (contains_at_least_one_tag and union)
 
-def check_contains_keywords(recipe: recipe, keywords: list[str], union: bool = True) -> bool:
+def check_contains_keywords(recipe: Recipe, keywords: list[str], union: bool = True) -> bool:
     contains_at_least_one_keyword = False
     contains_all_keywords = True
     for keyword in keywords:
@@ -138,49 +120,96 @@ def check_contains_keywords(recipe: recipe, keywords: list[str], union: bool = T
 # Check the given recipe against each active filter.
 # >> Return: True if the recipe satisfies every active filter.
 #            False if it does not.
-def apply_selected_filters(recipe: recipe, filter_on: dict[filter_conditions, bool],
+def apply_selected_filters(recipe: Recipe, active_filters: dict[Filter_conditions, bool],
                            tags: list[str], keywords: list[str], max_duration: int) -> bool:
-    return ((filter_on[filter_conditions.CONTAINS_TAGS_UNION]         and check_contains_tags(recipe, tags, union=True)) 
-        and (filter_on[filter_conditions.CONTAINS_TAGS_INTERSECT]     and check_contains_tags(recipe, tags, union=False))
-        and (filter_on[filter_conditions.CONTAINS_KEYWORDS_UNION]     and check_contains_keywords(recipe, keywords, union=True))
-        and (filter_on[filter_conditions.CONTAINS_KEYWORDS_INTERSECT] and check_contains_keywords(recipe, keywords, union=False))
-        and (filter_on[filter_conditions.DURATION_LESS_THAN]          and (recipe.get_duration <= max_duration)))
+    return ((active_filters.__contains__(Filter_conditions.CONTAINS_TAGS_UNION)         and check_contains_tags(recipe, tags, union=True)) 
+        and (active_filters.__contains__(Filter_conditions.CONTAINS_TAGS_INTERSECT)     and check_contains_tags(recipe, tags, union=False))
+        and (active_filters.__contains__(Filter_conditions.CONTAINS_KEYWORDS_UNION)     and check_contains_keywords(recipe, keywords, union=True))
+        and (active_filters.__contains__(Filter_conditions.CONTAINS_KEYWORDS_INTERSECT) and check_contains_keywords(recipe, keywords, union=False))
+        and (active_filters.__contains__(Filter_conditions.DURATION_LESS_THAN)          and (recipe.get_prep_time <= max_duration)))
 
-# Set all values to the given default value (without changing the keys).
-def reset_filters(active_filters: dict[filter_conditions, bool], default_value: bool = False):
-    for key in active_filters.keys():
-        active_filters[key] = default_value
-    return active_filters
+def format_time(minutes: int):
+    # EXTENSION: can toggle between just minutes or hours and minutes format
+    MINUTES_PER_HOUR = 60
+    output = ""
+    if minutes > MINUTES_PER_HOUR:
+        output += f"{minutes // MINUTES_PER_HOUR} h "
+    output += f"{minutes % MINUTES_PER_HOUR} m"
+    return output
 
-# The view recipes menu option
-# Apply filters
-# Search
-# Select a recipe to view it
-def view_recipes():
-    # TODO: Load recipes from file
-    recipes = list[recipe]
-    display_recipes(recipes)
+# Display a single recipe and all of its attributes and values.
+def display_recipe(recipe: Recipe):
+    print(recipe.get_name(), "|", "Preparation time:", format_time(recipe.get_prep_time()))
+    print()
+    print("Ingredients")
+    for ingredient, amount in recipe.get_ingredients().items():
+        print(amount.get_amount, amount.get_unit(), ingredient)
+    print()
+    print("Method")
+    for i in range(recipe.get_steps().__len__()):
+        print(f"{i + 1}: {recipe.get_steps()[i]}")
+    print()
+    print("Tags:", " ".join(recipe.get_tags()))
+
+# The view recipes menu option: select a recipe to view it
+def view_recipes(recipes: list[Recipe]):
     # TODO: Allow user to enter filter options --> perhaps do this in settings
 
-    chosen_filters: list[filter_conditions] = []
+    chosen_filters: list[Filter_conditions] = []
     chosen_tags = list[int] = []
     chosen_keywords: list[str] = []
     chosen_duration: int = [] # Max duration
 
-    filter_on = {
-        filter_conditions.CONTAINS_TAGS_UNION : False,
-        filter_conditions.CONTAINS_TAGS_INTERSECT : False,
-        filter_conditions.CONTAINS_KEYWORDS_UNION : False,
-        filter_conditions.CONTAINS_KEYWORDS_INTERSECT : False,
-        filter_conditions.DURATION_LESS_THAN : False
-    }
-
-    # Activate chosen filters
-    filter_on = reset_filters()
-
-    for filter in chosen_filters:
-        filter_on[filter] = True
-
+    # Filter recipes
+    check_recipe_satisfies_filters = lambda recipe: apply_selected_filters(recipe, chosen_filters, chosen_tags, chosen_keywords, chosen_duration)
+    filtered_recipes = filter_recipes(recipes, check_recipe_satisfies_filters)
+    
     # Display recipes (filtered)
-    check_recipe_satisfies_filters = lambda recipe: apply_selected_filters(recipe, filter_on, chosen_tags, chosen_keywords, chosen_duration)
-    display_recipes(recipes, check_recipe_satisfies_filters)
+    while recipe_to_display != -1:
+        display_menu([recipes[i].get_name() for i in filtered_recipes])
+        recipe_to_display = user_selects_menu_item(filtered_recipes.__len__())
+        if recipe_to_display == -1:
+            break
+        display_recipe(recipes[filtered_recipes[recipe_to_display]])
+        input("Enter any key to exit: ")
+
+#-------------------#
+# Main Code Section #
+#-------------------#
+
+# Load files
+recipes: list[Recipe]
+load_files(recipes)
+
+# Main menu
+class Menu_options(Enum):
+    VIEW_RECIPES = 0,
+    ADD_RECIPES = 1,
+    ADD_UNITS = 2,
+    VIEW_MEAL_PLANS = 3,
+    CREATE_MEAL_PLANS = 4,
+    EXIT = -1
+MAIN_MENU = [
+    "View recipes",
+    "Add/edit recipe",
+    "Add/edit units",
+    "View meal plans",
+    "Create/edit meal plan",
+]
+display_menu(MAIN_MENU)
+choice = user_selects_menu_item(MAIN_MENU.__len__())
+match choice:
+    case Menu_options.VIEW_RECIPES:
+        view_recipes(recipes)
+    # case Menu_options.ADD_RECIPES:
+    #     add_recipes(recipes)
+    # case Menu_options.ADD_UNITS:
+    #     add_units(units)
+    # case Menu_options.VIEW_MEAL_PLANS:
+    #     view_meal_plans(meal_plans)
+    # case Menu_options.CREATE_MEAL_PLANS:
+    #     create_meal_plans(meal_plans)
+    case Menu_options.EXIT:
+        print("Exiting...")
+    case other:
+        print(f"[{MAIN_MENU[choice]}] selected.")

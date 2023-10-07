@@ -1,6 +1,6 @@
-from unit import unit
+from unit import Unit
 
-class unit:
+class Unit:
     _name: str
     _symbol: str 
 

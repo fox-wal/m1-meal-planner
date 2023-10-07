@@ -1,17 +1,17 @@
-from unit import unit
+from unit import Unit
 
 DEFAULT_AMOUNT = 1
-NO_UNIT = unit("no unit", "x")
+NO_UNIT = Unit("no unit", "x")
 
-class unit_amount:
-    _unit: unit
+class Unit_amount:
+    _unit: Unit
     _amount: float
 
-    def __init__(self, unit: unit = NO_UNIT, amount: float = DEFAULT_AMOUNT) -> None:
+    def __init__(self, unit: Unit = NO_UNIT, amount: float = DEFAULT_AMOUNT) -> None:
         self._unit = unit
         self._amount = amount
 
-    def get_unit(self) -> unit:
+    def get_unit(self) -> Unit:
         return self._unit
     
     def get_amount(self) -> float:
