@@ -4,14 +4,17 @@
 
 from recipe import Recipe
 from enum import Enum
+from settings import *
 
 # Global variables
 EXIT_CHAR = "X"
 EXIT_VALUE = -1
+NO_MAX_PREP_TIME = "no max"
+settings: Settings = Settings([], 0, SortBys.NAME, [], [])
 
-#                   #
-# Generic Functions #
-#                   #
+#---------------------------#
+# General-Purpose Functions #
+#---------------------------#
 
 # Display an error message.
 def print_error(error_message: str):
@@ -31,90 +34,19 @@ def display_menu(menu: list[str]):
         print(f"{i + 1}. {menu[i]}")
 
 # Display a menu and prompt user to select an item.
-# >> Return: the index selected, or -1 if the user entered "X".
+# Return: The index of the chosen item
+#      OR -1 if the user entered "X".
 def display_selection_menu(menu: list[str]) -> int:
     display_menu(menu)
     return user_selects_menu_item(menu.__len__())
 
-# Display a section heading.
-def print_heading(heading: str, new_line: bool = True):
-    print("\n---", heading, "---")
+# Format a line of text using a standardised "heading" format.
+def format_heading(heading: str):
+    return f"\n--- {heading} ---"
 
-# Prompt the user to enter an integer to select an item from a menu until they
-# enter a valid number.
-# >> Return: the index selected, or -1 if the user entered "X".
-def user_selects_menu_item(menu_size: int) -> int:
-    MIN = 1
-    MAX = menu_size - 1
-
-    PROMPT = f"Select an item from the menu using the index. Enter {EXIT_CHAR} to exit.\n"
-
-    selection = input_int(PROMPT, MIN, MAX)
-
-    return selection - 1
-
-#--------------#
-# View Recipes #
-#--------------#
-
-# Add the index of each recipe that satisfies the given filter condition to a list.
-# >> Returns: list of indexes of recipes that satisfy the given filter condition.
-def filter_recipes(recipes: list[Recipe], check_fits_filter: function(Recipe)) -> list[int]:
-    filtered_recipe_indexes = []
-    for i in range(recipes.__len__()):
-        if check_fits_filter(recipes[i]):
-            filtered_recipe_indexes.append(i)
-
-class FilterConditions(Enum):
-    CONTAINS_TAGS_UNION = 0
-    CONTAINS_TAGS_INTERSECT = 1
-    CONTAINS_KEYWORDS_UNION = 2
-    CONTAINS_KEYWORDS_INTERSECT = 3
-    DURATION_LESS_THAN = 4
-
-all_tags: list[str] = ["breakfast", "lunch", "dinner"]
-
-def load_files(path: str):
-    # TODO: write file loading function
-    load_recipes()
-    pass
-
-def load_recipes() -> list[Recipe]:
-    # TODO: write recipe loading function
-    RECIPE_PATH = "recipes.json"
-    pass
-
-def check_contains_tags(recipe: Recipe, tags: list[str], union: bool = True) -> bool:
-    contains_at_least_one_tag = False
-    contains_all_tags = True
-    for tag in tags:
-        if recipe.get_tags().__contains__(tag):
-            contains_at_least_one_tag = True
-        else:
-            contains_all_tags = False
-    return contains_all_tags or (contains_at_least_one_tag and union)
-
-def check_contains_keywords(recipe: Recipe, keywords: list[str], union: bool = True) -> bool:
-    contains_at_least_one_keyword = False
-    contains_all_keywords = True
-    for keyword in keywords:
-        if recipe.get_keywords().__contains__(keyword):
-            contains_at_least_one_keyword = True
-        else:
-            contains_all_keywords = False
-    return contains_all_keywords or (contains_at_least_one_keyword and union)
-
-# Check the given recipe against each active filter.
-# >> Return: True if the recipe satisfies every active filter.
-#            False if it does not.
-def apply_selected_filters(recipe: Recipe, active_filters: dict[FilterConditions, bool],
-                           tags: list[str], keywords: list[str], max_duration: int) -> bool:
-    return ((active_filters.__contains__(FilterConditions.CONTAINS_TAGS_UNION)         and check_contains_tags(recipe, tags, union=True)) 
-        and (active_filters.__contains__(FilterConditions.CONTAINS_TAGS_INTERSECT)     and check_contains_tags(recipe, tags, union=False))
-        and (active_filters.__contains__(FilterConditions.CONTAINS_KEYWORDS_UNION)     and check_contains_keywords(recipe, keywords, union=True))
-        and (active_filters.__contains__(FilterConditions.CONTAINS_KEYWORDS_INTERSECT) and check_contains_keywords(recipe, keywords, union=False))
-        and (active_filters.__contains__(FilterConditions.DURATION_LESS_THAN)          and (recipe.get_prep_time <= max_duration)))
-
+# Format the given number of minutes as a string.
+# Return: The given number of minutes as a string in the format "{hours} h {minutes} m"
+#      OR "{minutes} m" (if the number of minutes does not exceed 60).
 def format_time(minutes: int):
     # EXTENSION: can toggle between just minutes or hours and minutes format
     MINUTES_PER_HOUR = 60
@@ -124,26 +56,16 @@ def format_time(minutes: int):
     output += f"{minutes % MINUTES_PER_HOUR} m"
     return output
 
-# Display a single recipe and all of its attributes and values.
-def display_recipe(recipe: Recipe):
-    print(recipe.get_name(), "|", "Preparation time:", format_time(recipe.get_prep_time()))
-    print()
-    print_heading("Ingredients")
-    for ingredient, amount in recipe.get_ingredients().items():
-        print(amount.get_amount, amount.get_unit(), ingredient)
-    print()
-    print_heading("Method")
-    for i in range(recipe.get_steps().__len__()):
-        print(f"{i + 1}: {recipe.get_steps()[i]}")
-    print()
-    print("Tags:", " ".join(recipe.get_tags()))
+def format_member_list(list: list[str]):
+    return [format_member_name(name) for name in list]
 
-class SortingOptions(Enum):
-    NAME = 0
-    DURATION = 1
-    # EXTENSION: LAST_OPENED = 2
+def format_member_name(name: str):
+    return name.capitalize().replace('_', ' ')
 
-# gets input until it is between the (inclusive) min and max
+# Prompt the user to enter an integer until they enter either a valid integer between
+# the given min and max (inclusive) or the EXIT_CHAR.
+# Returns: The validated user input
+#       OR EXIT_VALUE.
 def input_int(prompt: str = "", min: int = None, max: int = None) -> int:
     ERROR_GENERIC =  "Invalid selection."
     ERROR_OUT_OF_RANGE = f"Please enter a whole number between {min} and {max}."
@@ -173,47 +95,116 @@ def input_int(prompt: str = "", min: int = None, max: int = None) -> int:
         #     print_error(ERROR_GENERIC)
     return number
      
+# Prompt the user to enter a valid index until they do so.
+# Return: The index of the chosen item
+#      OR -1 if the user entered "X".
+def user_selects_menu_item(menu_size: int) -> int:
+    MIN = 1
+    MAX = menu_size - 1
+
+    PROMPT = f"Select an item from the menu using the index. Enter {EXIT_CHAR} to exit.\n"
+
+    selection = input_int(PROMPT, MIN, MAX)
+
+    return selection - 1
+
+#--------------#
+# View Recipes #
+#--------------#
+
+# Add the index of each recipe that satisfies the given filter condition to a list.
+# Return: List of indexes of recipes that satisfy the given filter condition.
+def filter_recipes(recipes: list[Recipe], check_fits_filter: function(Recipe)) -> list[int]:
+    filtered_recipe_indexes = []
+    for i in range(recipes.__len__()):
+        if check_fits_filter(recipes[i]):
+            filtered_recipe_indexes.append(i)
+
+# Load all json configuration and data files.
+def load_files(path: str):
+    # TODO: write file loading function
+    load_recipes()
+    pass
+
+# Load the json recipe file.
+def load_recipes() -> list[Recipe]:
+    # TODO: write recipe loading function
+    RECIPE_PATH = "recipes.json"
+    pass
+
+# Check whether the given recipe contains all/at least one of the given tags (depending
+# on whether union is False/True, respectively).
+# Returns: True if it does
+#          False if it does not
+def check_contains_tags(recipe: Recipe, tags: list[str], union: bool) -> bool:
+    contains_at_least_one_tag = False
+    contains_all_tags = True
+    for tag in tags:
+        if recipe.get_tags().__contains__(tag):
+            contains_at_least_one_tag = True
+        else:
+            contains_all_tags = False
+    return contains_all_tags or (contains_at_least_one_tag and union)
+
+# Check whether the given recipe contains all/at least one of the given search
+# terms (depending on whether union is False/True, respectively).
+# Returns: True if it does
+#          False if it does not.
+def check_contains_keywords(recipe: Recipe, search_terms: list[str], union: bool) -> bool:
+    contains_at_least_one_keyword = False
+    contains_all_keywords = True
+    for keyword in search_terms:
+        if recipe.get_keywords().__contains__(keyword):
+            contains_at_least_one_keyword = True
+        else:
+            contains_all_keywords = False
+    return contains_all_keywords or (contains_at_least_one_keyword and union)
+
+# Check the given recipe against each active filter.
+# Return: True if the recipe satisfies every active filter.
+#         False if it does not.
+def apply_filters(recipe: Recipe) -> bool:
+    return ((settings.active_filters.__contains__(FilterConditions.TAGS)      and check_contains_tags(recipe, settings.active_tags, settings.tag_union))
+        and (settings.active_filters.__contains__(FilterConditions.SEARCH)    and check_contains_keywords(recipe, settings.search_terms, settings.keyword_search))
+        and (settings.active_filters.__contains__(FilterConditions.PREP_TIME) and (recipe._prep_time <= settings.max_prep_time)))
+
+# Display all of the given recipe's attributes.
+def display_recipe(recipe: Recipe):
+    print(recipe.get_name(), "|", "Preparation time:", format_time(recipe.get_prep_time()))
+    print()
+    print(format_heading("Ingredients"))
+    for ingredient, amount in recipe.get_ingredients().items():
+        print(amount.get_amount, amount.get_unit(), ingredient)
+    print()
+    print(format_heading("Method"))
+    for i in range(recipe.get_steps().__len__()):
+        print(f"{i + 1}: {recipe.get_steps()[i]}")
+    print()
+    print("Tags:", " ".join(recipe.get_tags()))
+
+class FilterMenuOptions(Enum):
+    SORT_BY = 0
+    SEARCH_TERMS = 1
+    TAGS = 2
+    MAX_PREPARATION_TIME = 3
 
 # The view recipes menu option: select a recipe to view it
 def view_recipes(recipes: list[Recipe]):
-    active_filters: list[FilterConditions] = []
-    active_tags = list[int] = []
-    keywords: list[str] = []
-    max_prep_time: int
-    sort_by: SortingOptions
+    print(settings.generate_filter_settings_output())
 
-    # TODO: Display filtering and sorting settings
-    print_heading("Sorting")
-    print("Sort by", sort_by.name.lower().replace('_', ' ') + '.')
-    print_heading("Filters")
-    print("Search term(s):", ' '.join(keywords))
-    print("Tags:", ", ".join(active_tags))
-    print("Max preparation time:", max_prep_time)
+    # User decides whether to edit sort/filter settings.
+    choice = input("Would you like to change these sorting/filtering settings? [Y/N]")
 
-    choice = input("Would you like to change these filtering and sorting settings? [Y/N]")
     if choice.upper() == "Y":
-        # TODO: Allow user to edit filter options --> perhaps do this in settings
-        # Display menu of each element (i.e. tag, term, etc.)
-        # User can select one to edit
-        FILTER_MENU = [
-            "Sort by"
-            "Search terms"
-            "Tags"
-            "Max preparation time"
-        ]
+        # User selects a sort/filter item to edit
+        choice = display_selection_menu(format_member_list(FilterMenuOptions._member_names_))
 
-        choice = display_selection_menu(FILTER_MENU)
-
-        # They enter a menu with a table with all the possible, current, and new options.
         match choice:
-            
-            # For sort by, user selects from the available options.
-            case 0:
-                choice = display_selection_menu(sort_option.capitalize().replace('_', ' ') for sort_option in SortingOptions._member_names_)
+            case FilterMenuOptions.SORT_BY:
+                choice = display_selection_menu(format_member_list(SortBys._member_names_))
                 if choice != EXIT_VALUE:
-                    sort_by = choice
+                    settings.sort_by = choice
             
-            # For search term(s), user types in the new search term(s).
             case 1:
                 user_input = input("Search: ")
                 if user_input != "":
