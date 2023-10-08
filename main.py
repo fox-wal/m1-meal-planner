@@ -5,6 +5,7 @@
 from recipe import Recipe
 from enum import Enum
 from settings import *
+from format import *
 
 # Global variables
 EXIT_CHAR = "X"
@@ -15,10 +16,6 @@ settings: Settings = Settings([], 0, SortBys.NAME, [], [])
 #---------------------------#
 # General-Purpose Functions #
 #---------------------------#
-
-# Display an error message.
-def print_error(error_message: str):
-    print("Error:", error_message)
 
 # Display a menu with an index (starting from 1) before each item.
 def display_menu(menu: list[str]):
@@ -39,28 +36,6 @@ def display_menu(menu: list[str]):
 def display_selection_menu(menu: list[str]) -> int:
     display_menu(menu)
     return user_selects_menu_item(menu.__len__())
-
-# Format a line of text using a standardised "heading" format.
-def format_heading(heading: str):
-    return f"\n--- {heading} ---"
-
-# Format the given number of minutes as a string.
-# Return: The given number of minutes as a string in the format "{hours} h {minutes} m"
-#      OR "{minutes} m" (if the number of minutes does not exceed 60).
-def format_time(minutes: int):
-    # EXTENSION: can toggle between just minutes or hours and minutes format
-    MINUTES_PER_HOUR = 60
-    output = ""
-    if minutes > MINUTES_PER_HOUR:
-        output += f"{minutes // MINUTES_PER_HOUR} h "
-    output += f"{minutes % MINUTES_PER_HOUR} m"
-    return output
-
-def format_member_list(list: list[str]):
-    return [format_member_name(name) for name in list]
-
-def format_member_name(name: str):
-    return name.capitalize().replace('_', ' ')
 
 # Prompt the user to enter an integer until they enter either a valid integer between
 # the given min and max (inclusive) or the EXIT_CHAR.
@@ -83,16 +58,16 @@ def input_int(prompt: str = "", min: int = None, max: int = None) -> int:
             number = int(str_input)
             valid = ((min is None) or (min <= number)) and ((max is None) or (number <= min))
             if not valid:
-                print_error(ERROR_OUT_OF_RANGE)
+                print(format_error(ERROR_OUT_OF_RANGE))
         except ValueError:
             # If the user entered the exit character, return the exit value so the
             # user can exit the menu.
             if str_input.upper() == EXIT_CHAR:
                 return EXIT_VALUE
             # Otherwise, the user must have entered an invalid non-integer.
-            print_error(ERROR_NOT_INTEGER)
+            print(format_error(ERROR_NOT_INTEGER))
         # except:
-        #     print_error(ERROR_GENERIC)
+        #     print(format_error(ERROR_GENERIC))
     return number
      
 # Prompt the user to enter a valid index until they do so.
@@ -185,6 +160,7 @@ class FilterMenuOptions(Enum):
 
 # The view recipes menu option: select a recipe to view it
 def view_recipes(recipes: list[Recipe]):
+    # TODO: break down this function
     print(settings.generate_filter_settings_output())
 
     # User decides whether to edit sort/filter settings.
@@ -192,11 +168,11 @@ def view_recipes(recipes: list[Recipe]):
 
     if choice.upper() == "Y":
         # User selects a sort/filter item to edit
-        choice = display_selection_menu(format_member_list(FilterMenuOptions._member_names_))
+        choice = display_selection_menu(map(format_var_name, FilterMenuOptions._member_names_))
 
         match choice:
             case FilterMenuOptions.SORT_BY:
-                choice = display_selection_menu(format_member_list(SortBys._member_names_))
+                choice = display_selection_menu(map(format_var_name, SortBys._member_names_))
                 if choice != EXIT_VALUE:
                     settings.sort_by = choice
             
@@ -222,7 +198,7 @@ def view_recipes(recipes: list[Recipe]):
                 print("else     |")
                 print()
                 print(f"{'Tag'.ljust(MAX_TAG_LENGTH)}    {'Status'.ljust(MAX_SYMBOL_LENGTH)}    Command")
-                for tag in all_tags:
+                for tag in settings._all_tags:
                     # NOTE: max char amount for tag is:
                     MAX_SYMBOL_LENGTH = "Active".__len__()
                     if active_tags.__contains__(tag):
@@ -257,13 +233,12 @@ def view_recipes(recipes: list[Recipe]):
 
 
     # Filter recipes
-    check_recipe_satisfies_filters = lambda recipe: apply_selected_filters(recipe, active_filters, active_tags, keywords, max_prep_time)
+    check_recipe_satisfies_filters = lambda recipe: apply_filters(recipe)
     filtered_recipes = filter_recipes(recipes, check_recipe_satisfies_filters)
     
     # Display recipes (filtered)
     while recipe_to_display != -1:
-        display_menu([recipes[i].get_name() for i in filtered_recipes])
-        recipe_to_display = user_selects_menu_item(filtered_recipes.__len__())
+        recipe_to_display = display_selection_menu([recipes[i].get_name() for i in filtered_recipes])
         if recipe_to_display == -1:
             break
         display_recipe(recipes[filtered_recipes[recipe_to_display]])

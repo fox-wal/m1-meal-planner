@@ -1,5 +1,5 @@
 from enum import Enum
-from main import format_heading, format_member_name, format_time, NO_MAX_PREP_TIME
+from format import format_heading, format_var_name, format_time
 
 class SortBys(Enum):
     NAME = 0
@@ -43,10 +43,10 @@ class Settings:
         self.max_prep_time = max_prep_time
         self.sort_by = sort_by
     
-    def generate_filter_settings_output(self) -> str:
+    def generate_filter_settings_output(self, no_max_prep_time_message: str) -> str:
         # Sorting condition
         string = "\n" + format_heading("Sorting")
-        string += "\nSort by " + format_member_name(self.sort_by) + '.'
+        string += "\nSort by " + format_var_name(self.sort_by) + '.'
 
         # Filters
         string += "\n" + format_heading("Filters")
@@ -54,7 +54,7 @@ class Settings:
         string += "\nTags: " + ", ".join(self.active_tags)
         string += "\nMax preparation time: "
         if self.max_prep_time == 0:
-            string += NO_MAX_PREP_TIME
+            string += no_max_prep_time_message
         else:
             string += format_time(self.max_prep_time)
 
