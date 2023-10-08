@@ -1,5 +1,5 @@
 from unit_amount import UnitAmount
-from main import format_time
+from format import format_time
 
 class Recipe:
     _name: str
