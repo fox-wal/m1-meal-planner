@@ -170,17 +170,12 @@ def apply_filters(recipe: Recipe) -> bool:
 
 # Display all of the given recipe's attributes.
 def display_recipe(recipe: Recipe):
-    print(recipe.get_name(), "|", "Preparation time:", format_time(recipe.get_prep_time()))
-    print()
+    print(recipe.format_title())
     print(format_heading("Ingredients"))
-    for ingredient, amount in recipe.get_ingredients().items():
-        print(amount.get_amount, amount.get_unit(), ingredient)
-    print()
+    print(recipe.format_ingredients())
     print(format_heading("Method"))
-    for i in range(recipe.get_steps().__len__()):
-        print(f"{i + 1}: {recipe.get_steps()[i]}")
-    print()
-    print("Tags:", " ".join(recipe.get_tags()))
+    print(recipe.format_method())
+    print("Tags:", recipe.format_tags())
 
 class FilterMenuOptions(Enum):
     SORT_BY = 0
