@@ -138,7 +138,7 @@ def check_contains_keywords(recipe: Recipe, search_terms: list[str], union: bool
 # Check the given recipe against each active filter.
 # Return: True if the recipe satisfies every active filter.
 #         False if it does not.
-def apply_filters(recipe: Recipe) -> bool:
+def check_satisfies_filters(recipe: Recipe) -> bool:
     return ((settings.active_filters.__contains__(FilterConditions.TAGS)      and check_contains_tags(recipe, settings.active_tags, settings.tag_union))
         and (settings.active_filters.__contains__(FilterConditions.SEARCH)    and check_contains_keywords(recipe, settings.search_terms, settings.keyword_search))
         and (settings.active_filters.__contains__(FilterConditions.PREP_TIME) and (recipe._prep_time <= settings.max_prep_time)))
@@ -233,7 +233,7 @@ def view_recipes(recipes: list[Recipe]):
 
 
     # Filter recipes
-    check_recipe_satisfies_filters = lambda recipe: apply_filters(recipe)
+    check_recipe_satisfies_filters = lambda recipe: check_satisfies_filters(recipe)
     filtered_recipes = filter_recipes(recipes, check_recipe_satisfies_filters)
     
     # Display recipes (filtered)
