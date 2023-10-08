@@ -5,6 +5,10 @@
 from recipe import Recipe
 from enum import Enum
 
+# Global variables
+EXIT_CHAR = "X"
+EXIT_VALUE = -1
+
 #                   #
 # Generic Functions #
 #                   #
@@ -26,6 +30,12 @@ def display_menu(menu: list[str]):
     for i in range(0, menu.__len__()):
         print(f"{i + 1}. {menu[i]}")
 
+# Display a menu and prompt user to select an item.
+# >> Return: the index selected, or -1 if the user entered "X".
+def display_selection_menu(menu: list[str]) -> int:
+    display_menu(menu)
+    return user_selects_menu_item(menu.__len__())
+
 # Display a section heading.
 def print_heading(heading: str, new_line: bool = True):
     print("\n---", heading, "---")
@@ -34,40 +44,13 @@ def print_heading(heading: str, new_line: bool = True):
 # enter a valid number.
 # >> Return: the index selected, or -1 if the user entered "X".
 def user_selects_menu_item(menu_size: int) -> int:
-    EXIT_CHAR = "X"
-    EXIT_VALUE = -1
-
     MIN = 1
-    MAX = menu_size
+    MAX = menu_size - 1
 
     PROMPT = f"Select an item from the menu using the index. Enter {EXIT_CHAR} to exit.\n"
 
-    ERROR_GENERIC =  "Invalid selection."
-    ERROR_OUT_OF_RANGE = f"Please enter a whole number between {MIN} and {MAX}."
-    ERROR_NOT_INTEGER = "Please ensure you enter a whole number."
+    selection = input_int(PROMPT, MIN, MAX)
 
-    # Ask user for input.
-    print(PROMPT)
-
-    # Continue prompting user for input using relevant error messages until they
-    # enter a valid integer within the appropriate range.
-    valid = False
-    while not valid:
-        try:
-            str_input = input()
-            selection = int(str_input)
-            valid = (MIN <= selection) and (selection <= MAX)
-            if not valid:
-                print_error(ERROR_OUT_OF_RANGE)
-        except ValueError:
-            # If the user entered the exit character, return the exit value so the
-            # user can exit the menu.
-            if str_input.upper() == EXIT_CHAR:
-                return EXIT_VALUE
-            # Otherwise, the user must have entered an invalid non-integer.
-            print_error(ERROR_NOT_INTEGER)
-        # except:
-        #     print_error(ERROR_GENERIC)
     return selection - 1
 
 #--------------#
@@ -89,7 +72,7 @@ class FilterConditions(Enum):
     CONTAINS_KEYWORDS_INTERSECT = 3
     DURATION_LESS_THAN = 4
 
-all_tags: list[str]
+all_tags: list[str] = ["breakfast", "lunch", "dinner"]
 
 def load_files(path: str):
     # TODO: write file loading function
@@ -160,6 +143,37 @@ class SortingOptions(Enum):
     DURATION = 1
     # EXTENSION: LAST_OPENED = 2
 
+# gets input until it is between the (inclusive) min and max
+def input_int(prompt: str = "", min: int = None, max: int = None) -> int:
+    ERROR_GENERIC =  "Invalid selection."
+    ERROR_OUT_OF_RANGE = f"Please enter a whole number between {min} and {max}."
+    ERROR_NOT_INTEGER = "Please ensure you enter a whole number."
+
+    valid = False
+    print(prompt)
+
+    # Continue prompting user for input using relevant error messages until they
+    # enter a valid integer within the appropriate range.
+    valid = False
+    while not valid:
+        try:
+            str_input = input()
+            number = int(str_input)
+            valid = ((min is None) or (min <= number)) and ((max is None) or (number <= min))
+            if not valid:
+                print_error(ERROR_OUT_OF_RANGE)
+        except ValueError:
+            # If the user entered the exit character, return the exit value so the
+            # user can exit the menu.
+            if str_input.upper() == EXIT_CHAR:
+                return EXIT_VALUE
+            # Otherwise, the user must have entered an invalid non-integer.
+            print_error(ERROR_NOT_INTEGER)
+        # except:
+        #     print_error(ERROR_GENERIC)
+    return number
+     
+
 # The view recipes menu option: select a recipe to view it
 def view_recipes(recipes: list[Recipe]):
     active_filters: list[FilterConditions] = []
@@ -181,15 +195,80 @@ def view_recipes(recipes: list[Recipe]):
         # TODO: Allow user to edit filter options --> perhaps do this in settings
         # Display menu of each element (i.e. tag, term, etc.)
         # User can select one to edit
+        FILTER_MENU = [
+            "Sort by"
+            "Search terms"
+            "Tags"
+            "Max preparation time"
+        ]
+
+        choice = display_selection_menu(FILTER_MENU)
+
         # They enter a menu with a table with all the possible, current, and new options.
-        # The cursor jumps from line to line.
-        # - [Enter] = keep the same
-        # - a = add
-        # - r = remove
-        # - c = clear all
-        # For sort by, user selects from the available options.
-        # For max prep time, user enters a value in minutes, or 0 to remove the constraint.
-        # For search term(s), user types in the new search term(s).
+        match choice:
+            
+            # For sort by, user selects from the available options.
+            case 0:
+                choice = display_selection_menu(sort_option.capitalize().replace('_', ' ') for sort_option in SortingOptions._member_names_)
+                if choice != EXIT_VALUE:
+                    sort_by = choice
+            
+            # For search term(s), user types in the new search term(s).
+            case 1:
+                user_input = input("Search: ")
+                if user_input != "":
+                    keywords = user_input.split(' ')
+            
+            # The cursor jumps from line to line.
+            # - [Enter] = keep the same
+            # - a = add
+            # - r = remove
+            # - c = clear all
+            case 2:
+                MAX_TAG_LENGTH = 20
+                print("Command  | Function")
+                print("---------|-------------------------------------------------")
+                print("a        | activate current tag")
+                print("d        | deactivate)")
+                print("da       | deactivate all tags")
+                print("1        | activate the current tag and deactivate the rest")
+                print("anything | do nothing")
+                print("else     |")
+                print()
+                print(f"{'Tag'.ljust(MAX_TAG_LENGTH)}    {'Status'.ljust(MAX_SYMBOL_LENGTH)}    Command")
+                for tag in all_tags:
+                    # NOTE: max char amount for tag is:
+                    MAX_SYMBOL_LENGTH = "Active".__len__()
+                    if active_tags.__contains__(tag):
+                        status = "Active"
+                    else:
+                        status = ""
+                    user_input = input(f"{tag.ljust(MAX_TAG_LENGTH)}    {status.ljust(MAX_SYMBOL_LENGTH)}    ")
+                    match user_input:
+                        case "a":
+                            if status != "Active":
+                                active_tags.append(tag)
+                        case "d":
+                            if status == "Active":
+                                active_tags.remove(tag)
+                        case "da":
+                            active_tags.clear()
+                        case "1":
+                            active_tags = [tag]
+            
+            # For max prep time, user enters a value in minutes, or 0 to remove the constraint.
+            case 3:
+                if max_prep_time == 0:
+                    output += "none"
+                else:
+                    output += format_time(max_prep_time)
+                print("Current max prep time:", output)
+                value = input_int(f"Enter new max prep time in minutes (or {EXIT_CHAR} to exit): ", 0)
+                if value != EXIT_VALUE:
+                    max_prep_time = value
+                
+        # TODO: remove union and intersect variations in enum and create a separate variable for it
+
 
     # Filter recipes
     check_recipe_satisfies_filters = lambda recipe: apply_selected_filters(recipe, active_filters, active_tags, keywords, max_prep_time)
