@@ -161,7 +161,7 @@ class FilterMenuOptions(Enum):
 # The view recipes menu option: select a recipe to view it
 def view_recipes(recipes: list[Recipe]):
     # TODO: break down this function
-    print(settings.generate_filter_settings_output())
+    print(settings.generate_filter_settings_output(NO_MAX_PREP_TIME))
 
     # User decides whether to edit sort/filter settings.
     choice = input("Would you like to change these sorting/filtering settings? [Y/N]")
@@ -179,7 +179,7 @@ def view_recipes(recipes: list[Recipe]):
             case 1:
                 user_input = input("Search: ")
                 if user_input != "":
-                    keywords = user_input.split(' ')
+                    settings.search_terms = user_input.split(' ')
             
             # The cursor jumps from line to line.
             # - [Enter] = keep the same
