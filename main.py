@@ -158,6 +158,33 @@ class FilterMenuOptions(Enum):
     TAGS = 2
     MAX_PREPARATION_TIME = 3
 
+# Sort the recipes according to the compare function. If the compare function returns
+# a value < 0, this means that the left value comes before the right value.
+# Return: sorted list of recipes.
+def sort_recipes(recipes: list[Recipe], compare: function) -> list[Recipe]:
+    if recipes.__len__() == 1:
+        return recipes
+    mid = recipes.__len__() // 2
+    left: list[Recipe] = sort_recipes(recipes[:mid], compare)
+    right: list[Recipe] = sort_recipes(recipes[mid:], compare)
+    result: list[Recipe]
+    i: int = 0
+    j: int = 0
+    while (i + j) < (left.__len__() + right.__len__()):
+        if compare(left[i], right[j]) < 0:
+            result.append(left[i])
+            i += 1
+        else:
+            result.append(right[j])
+            j += 1
+    while i < left.__len__():
+        result.append(left[i])
+        i += 1
+    while j < right.__len__():
+        result.append(right[j])
+        j += 1
+    return result
+
 # The view recipes menu option: select a recipe to view it
 def view_recipes(recipes: list[Recipe]):
     # TODO: break down this function
