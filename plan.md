@@ -4,7 +4,7 @@
 
 - [x] 1. Menu
     - [x] 1. View recipes
-        - [ ] 1. Sort (alphabetically, _by date_)
+        - [x] 1. Sort (alphabetically, _by date_)
         - [ ] 2. Search
         - [x] 3. Filter by tags
         - [x] 4. *Filter by duration*
