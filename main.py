@@ -185,6 +185,10 @@ def sort_recipes(recipes: list[Recipe], compare: function) -> list[Recipe]:
         j += 1
     return result
 
+# Return: the name of the given variable.
+def name(variable) -> str:
+    return f'{variable=}'.split('=')[0]
+
 # The view recipes menu option: select a recipe to view it
 def view_recipes(recipes: list[Recipe]):
     # TODO: break down this function
@@ -258,10 +262,30 @@ def view_recipes(recipes: list[Recipe]):
                 
         # TODO: remove union and intersect variations in enum and create a separate variable for it
 
+    # Compare the given attribute of the two given recipes.
+    # Return: -1 if left < right
+    #          0 if left = right
+    #          1 if left > right
+    def compare_attribute(left: Recipe, right: Recipe, attribute: str) -> int:
+        LESS_THAN = -1
+        EQUAL = 0
+        GREATER_THAN = 1
+        if left.__getattribute__(attribute) < right.__getattribute__(attribute):
+            return LESS_THAN
+        elif left.__getattribute__(attribute) == right.__getattribute__(attribute):
+            return EQUAL
+        else:
+            return GREATER_THAN
+
+    compare_functions = {
+        SortBys.NAME : lambda left, right: compare_attribute(left, right, f'{Recipe._name=}'.split('=')[0]),
+        SortBys.PREP_TIME : lambda left, right: compare_attribute(left, right, f'{Recipe._prep_time=}'.split('=')[0])
+    }
 
     # Filter recipes
     check_recipe_satisfies_filters = lambda recipe: check_satisfies_filters(recipe)
     filtered_recipes = filter_recipes(recipes, check_recipe_satisfies_filters)
+    filtered_recipes = sort_recipes(filtered_recipes, compare_functions[settings.sort_by])
     
     # Display recipes (filtered)
     while recipe_to_display != -1:
