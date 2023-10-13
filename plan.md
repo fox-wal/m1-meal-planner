@@ -2,20 +2,20 @@
 
 ## Objectives
 
-- [x] 1. Menu
-    - [x] 1. View recipes
-        - [x] 1. Sort (alphabetically, _by date_)
+- [-] 1. Menu
+    - [-] 1. View recipes
+        - [-] 1. Sort (alphabetically, _by date_)
         - [ ] 2. Search
-        - [x] 3. Filter by tags
-        - [x] 4. *Filter by duration*
+        - [-] 3. Filter by tags
+        - [-] 4. *Filter by duration*
     - [ ] 2. Add/edit recipe
-        - [ ] 1. Add ingredients
-            - [ ] 1. Select from existing ingredients
-            - [ ] 2. or add new
-            - [ ] 3. or type custom (one-off)
-        - [ ] 2. ...and amounts
-            - [ ] 1. Enter amount
-            - [ ] 2. Select from existing units
+        - [-] 1. Add ingredients
+            - [-] 1. Select from existing ingredients
+            - [-] 2. or add new
+            - [-] 3. or type custom (one-off)
+        - [-] 2. ...and amounts
+            - [-] 1. Enter amount
+            - [-] 2. Select from existing units
         - [ ] 3. Add steps
             - [ ] 1. Add individually
             - [ ] 2. _State duration for each one_
