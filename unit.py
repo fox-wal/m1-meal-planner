@@ -1,6 +1,8 @@
 from unit import Unit
 
 class Unit:
+    NO_UNIT = Unit("no unit", "x")
+
     _name: str
     _symbol: str 
 

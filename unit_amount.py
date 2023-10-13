@@ -1,13 +1,12 @@
 from unit import Unit
 
-DEFAULT_AMOUNT = 1
-NO_UNIT = Unit("no unit", "x")
-
 class UnitAmount:
     _unit: Unit
     _amount: float
 
-    def __init__(self, unit: Unit = NO_UNIT, amount: float = DEFAULT_AMOUNT) -> None:
+    __DEFAULT_AMOUNT = 1
+    
+    def __init__(self, unit: Unit = Unit.NO_UNIT, amount: float = __DEFAULT_AMOUNT) -> None:
         self._unit = unit
         self._amount = amount
 
