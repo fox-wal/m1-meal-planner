@@ -27,12 +27,12 @@ def display_menu(menu: list[str]):
     ERROR_NO_MENU = "No menu to display."
 
     # Check if there are any items in the menu.
-    if menu.__len__() == 0:
+    if len(menu) == 0:
         print(ERROR_NO_MENU)
         return
 
     # Display each item in the menu preceded by an index (starting from 1).
-    for i in range(0, menu.__len__()):
+    for i in range(0, len(menu)):
         print(f"{i + 1}. {menu[i]}")
 
 def display_selection_menu(menu: list[str]) -> int:
@@ -43,7 +43,7 @@ def display_selection_menu(menu: list[str]) -> int:
         The index of the chosen item, or the exit value if the user entered the exit character.
     """
     display_menu(menu)
-    return user_selects_menu_item(menu.__len__())
+    return user_selects_menu_item(len(menu))
 
 def input_int(prompt: str = "", min: int = None, max: int = None) -> int:
     """
@@ -118,7 +118,7 @@ def filter_recipes(recipes: list[Recipe], check_include_recipe: function(Recipe)
         Indexes of recipes that satisfy the condition(s) checked in check_include_recipe.
     """
     filtered_recipe_indexes = []
-    for i in range(recipes.__len__()):
+    for i in range(len(recipes)):
         if check_include_recipe(recipes[i]):
             filtered_recipe_indexes.append(i)
 
@@ -232,25 +232,25 @@ def sort_recipes(recipes: list[Recipe], compare: function) -> list[Recipe]:
     Returns:
         A list of recipes sorted based on the `compare` function.
     """
-    if recipes.__len__() == 1:
+    if len(recipes) == 1:
         return recipes
-    mid = recipes.__len__() // 2
+    mid = len(recipes) // 2
     left: list[Recipe] = sort_recipes(recipes[:mid], compare)
     right: list[Recipe] = sort_recipes(recipes[mid:], compare)
     result: list[Recipe]
     i: int = 0
     j: int = 0
-    while (i + j) < (left.__len__() + right.__len__()):
+    while (i + j) < (len(left) + len(right)):
         if compare(left[i], right[j]) < 0:
             result.append(left[i])
             i += 1
         else:
             result.append(right[j])
             j += 1
-    while i < left.__len__():
+    while i < len(left):
         result.append(left[i])
         i += 1
-    while j < right.__len__():
+    while j < len(right):
         result.append(right[j])
         j += 1
     return result
@@ -301,7 +301,7 @@ def view_recipes(recipes: list[Recipe]):
                 print(f"{'Tag'.ljust(MAX_TAG_LENGTH)}    {'Status'.ljust(MAX_SYMBOL_LENGTH)}    Command")
                 for tag in settings._all_tags:
                     # NOTE: max char amount for tag is:
-                    MAX_SYMBOL_LENGTH = "Active".__len__()
+                    MAX_SYMBOL_LENGTH = len("Active")
                     if active_tags.__contains__(tag):
                         status = "Active"
                     else:
@@ -393,7 +393,7 @@ MAIN_MENU = [
     "Create/edit meal plan",
 ]
 display_menu(MAIN_MENU)
-choice = user_selects_menu_item(MAIN_MENU.__len__())
+choice = user_selects_menu_item(len(MAIN_MENU))
 match choice:
     case MenuOptions.VIEW_RECIPES:
         view_recipes(recipes)

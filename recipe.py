@@ -53,7 +53,7 @@ class Recipe:
     
     def format_method(self) -> str:
         string = ""
-        for i in range(self._steps().__len__()):
+        for i in range(len(self._steps())):
             string += f"{i + 1}: {self._steps()[i]}\n"
         return string
     
