@@ -47,8 +47,8 @@
 
 ### Week 1: 06-10-23
 
-- [x] Step 1: Menu
-- [ ] Step 1.1: View recipes
+- [-] Step 1: Main menu
+- [-] Step 1.1: View recipes
 
 ### Week 2: 13-10-23
 
