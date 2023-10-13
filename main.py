@@ -332,11 +332,15 @@ def view_recipes(recipes: list[Recipe]):
                 
         # TODO: remove union and intersect variations in enum and create a separate variable for it
 
-    # Compare the given attribute of the two given recipes.
-    # Return: -1 if left < right
-    #          0 if left = right
-    #          1 if left > right
     def compare_attribute(left: Recipe, right: Recipe, attribute: str) -> int:
+        """
+        Compare the given `attribute` of the two given recipes.
+
+        Returns:
+          - -1 if `left` < `right`
+          - 0 if `left` = `right`
+          - 1 if `left` > `right`
+        """
         LESS_THAN = -1
         EQUAL = 0
         GREATER_THAN = 1
