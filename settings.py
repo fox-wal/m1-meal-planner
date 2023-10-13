@@ -36,7 +36,7 @@ class Settings:
         self.sort_by = SortBys.NAME
 
     def __init__(self, search_terms: list[str], max_prep_time: int, sort_by: SortBys,
-                 all_tags: list[str], active_tags = list[str]) -> None:
+                 all_tags: list[str], active_tags = list[str]):
         self.all_tags = all_tags
         self.active_tags = active_tags
         self.search_terms = search_terms

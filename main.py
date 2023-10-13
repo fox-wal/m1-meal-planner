@@ -16,9 +16,14 @@ settings: Settings = Settings([], 0, SortBys.NAME, [], [])
 #---------------------------#
 # General-Purpose Functions #
 #---------------------------#
-
-# Display a menu with an index (starting from 1) before each item.
 def display_menu(menu: list[str]):
+    """
+    Displays a menu with an index (starting at 1) before each item.
+
+    Args:
+        menu: The menu to be displayed.
+    """
+
     ERROR_NO_MENU = "No menu to display."
 
     # Check if there are any items in the menu.
@@ -30,19 +35,29 @@ def display_menu(menu: list[str]):
     for i in range(0, menu.__len__()):
         print(f"{i + 1}. {menu[i]}")
 
-# Display a menu and prompt user to select an item.
-# Return: The index of the chosen item
-#      OR -1 if the user entered "X".
 def display_selection_menu(menu: list[str]) -> int:
+    """
+    Displays a menu and prompts user to select an item.
+
+    Returns::
+        The index of the chosen item, or the exit value if the user entered the exit character.
+    """
     display_menu(menu)
     return user_selects_menu_item(menu.__len__())
 
-# Prompt the user to enter an integer until they enter either a valid integer between
-# the given min and max (inclusive) or the EXIT_CHAR.
-# Returns: The validated user input
-#       OR EXIT_VALUE.
 def input_int(prompt: str = "", min: int = None, max: int = None) -> int:
-    ERROR_GENERIC =  "Invalid selection."
+    """
+    Prompts the user to enter a valid number or the exit character until they do so.
+
+    Args:
+        prompt: The initial prompt displayed to the user.
+        min: The (inclusive) minimum value the user should enter.
+        max: The (inclusive) maximum value the user should enter.
+
+    Returns:
+        The validated user input, or the exit value if the user selected the exit character.
+    """
+    
     ERROR_OUT_OF_RANGE = f"Please enter a whole number between {min} and {max}."
     ERROR_NOT_INTEGER = "Please ensure you enter a whole number."
 
@@ -66,14 +81,18 @@ def input_int(prompt: str = "", min: int = None, max: int = None) -> int:
                 return EXIT_VALUE
             # Otherwise, the user must have entered an invalid non-integer.
             print(format_error(ERROR_NOT_INTEGER))
-        # except:
-        #     print(format_error(ERROR_GENERIC))
     return number
      
-# Prompt the user to enter a valid index until they do so.
-# Return: The index of the chosen item
-#      OR -1 if the user entered "X".
 def user_selects_menu_item(menu_size: int) -> int:
+    """
+    Prompt the user to enter a valid index until they do so.
+    
+    Args:
+        menu_size: The number of items in the menu from which the user is making a selection.
+
+    Returns:
+        The index of the chosen item, or the exit value if the user entered the exit character.
+    """
     MIN = 1
     MAX = menu_size - 1
 
@@ -87,31 +106,60 @@ def user_selects_menu_item(menu_size: int) -> int:
 # View Recipes #
 #--------------#
 
-# Add the index of each recipe that satisfies the given filter condition to a list.
-# Return: List of indexes of recipes that satisfy the given filter condition.
-def filter_recipes(recipes: list[Recipe], check_fits_filter: function(Recipe)) -> list[int]:
+def filter_recipes(recipes: list[Recipe], check_include_recipe: function(Recipe)) -> list[int]:
+    """
+    Add the index of each recipe that satisfies the given filter condition to a list.
+
+    Args:
+        recipes: The recipes to be filtered.
+        check_include_recipe: Used to determine whether a given recipe should be included in the resulting list.
+    
+    Returns:
+        Indexes of recipes that satisfy the condition(s) checked in check_include_recipe.
+    """
     filtered_recipe_indexes = []
     for i in range(recipes.__len__()):
-        if check_fits_filter(recipes[i]):
+        if check_include_recipe(recipes[i]):
             filtered_recipe_indexes.append(i)
 
-# Load all json configuration and data files.
-def load_files(path: str):
+def load_files(path: str) -> list[str]:
+    """
+    Load all configuration and data files.
+
+    Args:
+        path: The absolute or relative path of the file to load.
+
+    Returns:
+        The file at the specified path as a list of lines.
+    """
     # TODO: write file loading function
     load_recipes()
     pass
 
-# Load the json recipe file.
 def load_recipes() -> list[Recipe]:
+    """
+    Load and parse the recipe file.
+
+    Returns:
+        The recipes from the file.
+    """
     # TODO: write recipe loading function
     RECIPE_PATH = "recipes.json"
     pass
 
-# Check whether the given recipe contains all/at least one of the given tags (depending
-# on whether union is False/True, respectively).
-# Returns: True if it does
-#          False if it does not
 def check_contains_tags(recipe: Recipe, tags: list[str], union: bool) -> bool:
+    """
+    Check whether `recipe` contains the given `tags`.
+
+    Args:
+        recipe: The recipe to check.
+        tags: Will check whether `recipe` contains these.
+        union: Determines whether to check that `recipe` contains *at least one* of the `tags` (True) or *all* of them (False).
+    
+    Returns:
+        True if it does.
+        False if it does not.
+    """
     contains_at_least_one_tag = False
     contains_all_tags = True
     for tag in tags:
@@ -121,11 +169,19 @@ def check_contains_tags(recipe: Recipe, tags: list[str], union: bool) -> bool:
             contains_all_tags = False
     return contains_all_tags or (contains_at_least_one_tag and union)
 
-# Check whether the given recipe contains all/at least one of the given search
-# terms (depending on whether union is False/True, respectively).
-# Returns: True if it does
-#          False if it does not.
 def check_contains_keywords(recipe: Recipe, search_terms: list[str], union: bool) -> bool:
+    """
+    Check whether `recipe` contains the given `search_terms`.
+
+    Args:
+        recipe: The recipe to check.
+        search terms: Will check whether `recipe` contains these.
+        union: Determines whether to check that `recipe` contains *at least one* of the `search_terms` (True) or *all* of them (False).
+    
+    Returns:
+        True if it does.
+        False if it does not.
+    """
     contains_at_least_one_keyword = False
     contains_all_keywords = True
     for keyword in search_terms:
@@ -135,16 +191,24 @@ def check_contains_keywords(recipe: Recipe, search_terms: list[str], union: bool
             contains_all_keywords = False
     return contains_all_keywords or (contains_at_least_one_keyword and union)
 
-# Check the given recipe against each active filter.
-# Return: True if the recipe satisfies every active filter.
-#         False if it does not.
-def check_satisfies_filters(recipe: Recipe) -> bool:
+def check_satisfies_filters(recipe: Recipe, filters: list[FilterConditions]) -> bool:
+    """
+    Check the given `recipe` against every given filter.
+
+    Args:
+        recipe: The recipe to be checked.
+        filters: The filter conditions to check whether the `recipe` satisfies.
+
+    Returns:
+        True if the `recipe` satisfies every filter.
+        False if it does not.
+    """
     return ((settings.active_filters.__contains__(FilterConditions.TAGS)      and check_contains_tags(recipe, settings.active_tags, settings.tag_union))
         and (settings.active_filters.__contains__(FilterConditions.SEARCH)    and check_contains_keywords(recipe, settings.search_terms, settings.keyword_search))
         and (settings.active_filters.__contains__(FilterConditions.PREP_TIME) and (recipe._prep_time <= settings.max_prep_time)))
 
-# Display all of the given recipe's attributes.
 def display_recipe(recipe: Recipe):
+    """Display all of the given recipe's attributes."""
     print(recipe.format_title())
     print(format_heading("Ingredients"))
     print(recipe.format_ingredients())
@@ -158,10 +222,16 @@ class FilterMenuOptions(Enum):
     TAGS = 2
     MAX_PREPARATION_TIME = 3
 
-# Sort the recipes according to the compare function. If the compare function returns
-# a value < 0, this means that the left value comes before the right value.
-# Return: sorted list of recipes.
 def sort_recipes(recipes: list[Recipe], compare: function) -> list[Recipe]:
+    """
+    Sort the `recipes` according to the `compare` function.
+    
+    Args:
+    compare (Recipe, Recipe) -> int: If this returns a value < 0, this means that the left value comes before the right value.
+
+    Returns:
+        A list of recipes sorted based on the `compare` function.
+    """
     if recipes.__len__() == 1:
         return recipes
     mid = recipes.__len__() // 2
@@ -185,12 +255,12 @@ def sort_recipes(recipes: list[Recipe], compare: function) -> list[Recipe]:
         j += 1
     return result
 
-# Return: the name of the given variable.
 def name(variable) -> str:
+    """Returns: the name of the given variable."""
     return f'{variable=}'.split('=')[0]
 
-# The view recipes menu option: select a recipe to view it
 def view_recipes(recipes: list[Recipe]):
+    """The view recipes menu option: select a recipe to view it."""
     # TODO: break down this function
     print(settings.generate_filter_settings_output(NO_MAX_PREP_TIME))
 

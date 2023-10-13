@@ -3,10 +3,13 @@ from format import format_time
 
 class Recipe:
     _name: str
-    _ingredients: dict[str, UnitAmount] # Ingredients and their respective amounts
+    _ingredients: dict[str, UnitAmount]
+    """Ingredients and their respective amounts"""
     _steps: list[str]
-    _keywords: list[str] # Used when searching and sorting
-    _prep_time: int # In minutes
+    _keywords: list[str]
+    """Used when searching and sorting"""
+    _prep_time: int
+    """In minutes"""
     _tags: list[str]
     
     # --- Constructor ---
