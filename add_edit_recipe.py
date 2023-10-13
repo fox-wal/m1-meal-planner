@@ -1,7 +1,7 @@
 import copy
 from recipe import Recipe
 from format import *
-from main import display_selection_menu
+from main import display_selection_menu, display_menu, input_int
 from unit_amount import *
 
 def get_input(prompt: str, allowed_symbols: str = " ") -> str:
@@ -87,7 +87,7 @@ def add_ingredient(existing_ingredients: list[str]) -> str | None:
                 ingredient = "*" + ingredient
             return ingredient
 
-def add_ingredients(existing_ingredients: list[str], units: list[Unit]) -> (dict[str, UnitAmount], list[str]):
+def add_ingredients(existing_ingredients: list[str], units: list[Unit]) -> tuple[dict[str, UnitAmount], list[str]]:
     """
     User adds ingredients and corresponding amounts.
 
@@ -140,17 +140,77 @@ def add_ingredients(existing_ingredients: list[str], units: list[Unit]) -> (dict
     
     return (ingredients_and_amounts, existing_ingredients)
 
-def add_edit_recipe(all_recipes: list[Recipe]) -> list[Recipe]:
-    """
-    - [-] 1. Add ingredients
-        - [-] 1. Select from existing ingredients
-        - [-] 2. or add new
-        - [-] 3. or type custom (one-off)
-    - [-] 2. ...and amounts
-        - [-] 1. Enter amount
-        - [-] 2. Select from existing units
-    - [ ] 3. Add steps
-        - [ ] 1. Add individually
-        - [ ] 2. _State duration for each one_
-    - [ ] 4. Add tags
-    """
+def add_steps() -> list[str]:
+    """User adds steps."""
+    steps = []
+    step_number = 1
+
+    # Repeat until user types "done".
+    while True:
+        step = input(f"{step_number}: ")
+
+        # Check for invalid inputs.
+        if step.__contains__("\n"):
+            print(format_error("Contains invalid characters."))
+            continue
+        elif len(step) == 0:
+            print(format_error("Step cannot be empty."))
+            continue
+        
+        # Check if done.
+        if step.lower() == "done":
+            break
+        else:
+            steps.append(step)
+        
+        step_number += 1
+
+def add_tags(existing_tags: list[str]) -> list[str]:
+    """User adds tags."""
+
+    selected_tags = []
+
+    # Show existing tags
+    display_menu(existing_tags)
+
+    while True:
+        # Choose from existing or add new.
+        tag = get_input("Enter tag number or type a new tag.\nOnly letters and hyphens allowed.\n", "-0123456789")
+
+        # If they enter a number, check if can be taken from existing.
+        if tag.isnumeric():
+            if (int(tag) >= 1) and (int(tag) <= len(existing_tags)):
+                selected_tags.append(existing_tags[int(tag) - 1])
+            else:
+                print(format_error("Invalid tag number."))
+                continue
+        else:
+            for i in tag:
+                if i.isnumeric():
+                    print(format_error("Cannot contain numbers."))
+                    continue
+            selected_tags.append(tag.lower())
+        
+        # Choose whether or not to continue.
+        choice = display_selection_menu(["Add another", "Finished"])
+
+        if choice == 1:
+            break
+    
+    return selected_tags
+
+def add_edit_recipe(all_recipes: list[Recipe], existing_ingredients: list[str], existing_tags: list[str], units: list[Unit]) -> tuple[list[Recipe], list[str], list[str]]:
+    while True:
+        choice = display_selection_menu(["Add recipe", "Finish"])
+        if choice == 1:
+            break
+
+        name = get_input("Recipe name: ", " -'")
+        (ingredient_amounts, additional_ingredients) = add_ingredients(existing_ingredients, units)
+        steps = add_steps()
+        prep_time = input_int("Prep time in minutes: ", 0)
+        tags = add_tags(existing_tags)
+
+        all_recipes.append(Recipe(name, ingredient_amounts, steps, prep_time, tags))
+
+    return (all_recipes, existing_ingredients.__add__(additional_ingredients), existing_tags.__add__(tags))
