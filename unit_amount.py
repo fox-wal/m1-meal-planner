@@ -15,3 +15,7 @@ class UnitAmount:
     
     def get_amount(self) -> float:
         return self._amount
+    
+    def as_string(self) -> str:
+        """Return the given UnitAmount's amount and symbol formatted as a string."""
+        return self._amount + self._unit.get_symbol()
