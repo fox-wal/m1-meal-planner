@@ -54,7 +54,7 @@
 
 - [ ] Step 1.2: Add/edit recipes
 
-### Week 3: 02-10-23
+### Week 3: 20-10-23
 
 - [ ] Step 1.3: Add/edit units
 
