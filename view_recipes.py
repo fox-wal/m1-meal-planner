@@ -159,86 +159,171 @@ def name(variable) -> str:
     """Returns: the name of the given variable."""
     return f'{variable=}'.split('=')[0]
 
-def edit_sorting_filtering_settings():
+def display_table(rows: list[str], contains_header: bool):
+    '''
+    Display a table.
+
+    Args:
+        rows: Rows of the table.
+        contains_header: If True: will display a line beneath the first row.
+    '''
     
+    print(rows[0])
+
+    # Header
+    if contains_header:
+        print("".ljust(len(rows[0]), "-"))
+
+    # Contents
+    for row in rows[1:]:
+        print(row)
+
+def format_table(data: list[list[str]], delimiter: str) -> list[str]:
+    '''
+    Format the given data as a table.
+
+    Args:
+        data: List of rows, each of which is a list of fields.
+        delimiter: Separates columns from one another.
+
+    Returns:
+        The given `data` formatted as rows with each field padded and separated
+        by the `delimiter`.
+    '''
+
+    # Get max length for each column.
+
+    max_lengths: list[int]
+
+    for row in data:
+        for i in range(len(row)):
+            if len(row[i]) > max_lengths[i]:
+                max_lengths[i] = len(row[i])
+    
+    # Format rows.
+
+    table: list[str]
+
+    for row in data:
+        padded_fields = [ row[i].ljust(max_lengths[i]) for i in range(row) ]
+        table.append(delimiter.join(padded_fields))
+
+    return table
+
+def format_tag_table_row(fields: list[str], max_tag_length: int, delimiter: str = "    ") -> str:
+    return delimiter.join( [field.ljust(max_tag_length) for field in fields] )
+
+class Commands(Enum):
+    ACTIVATE_CURRENT_TAG = "a"
+    DEACTIVATE_CURRENT_TAG = "d"
+    DEACTIVATE_ALL_TAGS = "da"
+    ACTIVATE_ONLY_THIS_TAG = "1"
+
+def edit_tags(all_tags: list[str]):
+    '''
+    Allow user to edit which tags are currently active.
+    '''
+
+    MAX_TAG_LENGTH = 20
+    INSTRUCTIONS = [
+        ["Command",                       "Function"],
+        [Commands.ACTIVATE_CURRENT_TAG,   "Activate this tag"],
+        [Commands.DEACTIVATE_CURRENT_TAG, "Deactivate this tag"],
+        [Commands.DEACTIVATE_ALL_TAGS,    "Deactivate all tags"],
+        [Commands.ACTIVATE_ONLY_THIS_TAG, "Activate the current tag and deactivate the rest"]
+    ]
+
+    tag_table_headers = [ "Tag", "Active?", "Command" ]
+    DELIMITER = "    "
+    is_active: bool
+    prompt = format_tag_table_row(tag_table_headers[:3], MAX_TAG_LENGTH, DELIMITER) + DELIMITER
+
+    # Display instructions
+
+    display_table(format_table(INSTRUCTIONS, " | "), True)
+    print(format_tag_table_row(tag_table_headers))
+
+    # Edit tags
+
+    for tag in all_tags:
+
+        is_active = active_tags.__contains__(tag)
+        command = input(prompt)
+
+        match command:
+            case "a":
+                if not is_active:
+                    active_tags.append(tag)
+            case "d":
+                if is_active:
+                    active_tags.remove(tag)
+            case "da":
+                active_tags.clear()
+            case "1":
+                active_tags = [tag]
+
+def get_max_prep_time() -> int:
+    '''
+    User enters max prep time.
+
+    Returns:
+        New max prep time.
+    '''
+    
+    output: str = "Current max prep time:"
+
+    if max_prep_time == 0:
+        output += "none"
+    else:
+        output += format_time(max_prep_time)
+
+    print(output)
+
+    value = input_int(f"Enter new max prep time in minutes (or {EXIT_CHAR} to exit): ", 0)
+    if value != EXIT_VALUE:
+        return value
+    else:
+        return max_prep_time
+
+def edit_sort_and_filter_settings(settings: Settings) -> Settings:
+    """
+    Allow user to edit sort and filter settings.
+    """
+    
+    # User selects a sort/filter item to edit
+    choice = display_selection_menu(map(format_var_name, FilterMenuOptions._member_names_))
+
+    match choice:
+        case FilterMenuOptions.SORT_BY:
+            choice = display_selection_menu(map(format_var_name, SortBys._member_names_))
+            if choice != EXIT_VALUE:
+                settings.sort_by = choice
+        
+        case FilterMenuOptions.SEARCH_TERMS:
+            user_input = input("Search: ")
+            if user_input != "":
+                settings.search_terms = user_input.split(' ')
+        
+        case FilterMenuOptions.TAGS:
+            edit_tags()
+
+        # For max prep time, user enters a value in minutes, or 0 to remove the constraint.
+        case FilterMenuOptions.MAX_PREPARATION_TIME:
+            max_prep_time = get_max_prep_time()
+            
+    return settings
 
 def view_recipes(recipes: list[Recipe], settings: Settings):
-    """The view recipes menu option: select a recipe to view it."""
-    # TODO: break down this function
+    """
+    The view recipes menu option: select a recipe to view it.
+    """
     print(settings.generate_filter_settings_output(NO_MAX_PREP_TIME))
 
     # User decides whether to edit sort/filter settings.
     choice = input("Would you like to change these sorting/filtering settings? [Y/N]")
 
-    if choice.upper() != "Y":
-        
-    
-        # User selects a sort/filter item to edit
-        choice = display_selection_menu(map(format_var_name, FilterMenuOptions._member_names_))
-
-        match choice:
-            case FilterMenuOptions.SORT_BY:
-                choice = display_selection_menu(map(format_var_name, SortBys._member_names_))
-                if choice != EXIT_VALUE:
-                    settings.sort_by = choice
-            
-            case 1:
-                user_input = input("Search: ")
-                if user_input != "":
-                    settings.search_terms = user_input.split(' ')
-            
-            # The cursor jumps from line to line.
-            # - [Enter] = keep the same
-            # - a = add
-            # - r = remove
-            # - c = clear all
-            case 2:
-                MAX_TAG_LENGTH = 20
-                INSTRUCTIONS = '''Command  | Function
----------|-------------------------------------------------
-a        | activate current tag
-d        | deactivate)
-da       | deactivate all tags
-1        | activate the current tag and deactivate the rest
-anything | do nothing
-else     |
-'''
-                INPUT_TABLE_HEADER = f'{"Tag".ljust(MAX_TAG_LENGTH)}    {"Status".ljust(MAX_SYMBOL_LENGTH)}    Command'
-                
-                print(INSTRUCTIONS)
-                print(INPUT_TABLE_HEADER)
-                for tag in settings._all_tags:
-                    # NOTE: max char amount for tag is:
-                    MAX_SYMBOL_LENGTH = len("Active")
-                    if active_tags.__contains__(tag):
-                        status = "Active"
-                    else:
-                        status = ""
-                    user_input = input(f"{tag.ljust(MAX_TAG_LENGTH)}    {status.ljust(MAX_SYMBOL_LENGTH)}    ")
-                    match user_input:
-                        case "a":
-                            if status != "Active":
-                                active_tags.append(tag)
-                        case "d":
-                            if status == "Active":
-                                active_tags.remove(tag)
-                        case "da":
-                            active_tags.clear()
-                        case "1":
-                            active_tags = [tag]
-            
-            # For max prep time, user enters a value in minutes, or 0 to remove the constraint.
-            case 3:
-                if max_prep_time == 0:
-                    output += "none"
-                else:
-                    output += format_time(max_prep_time)
-                print("Current max prep time:", output)
-                value = input_int(f"Enter new max prep time in minutes (or {EXIT_CHAR} to exit): ", 0)
-                if value != EXIT_VALUE:
-                    max_prep_time = value
-                
-        # TODO: remove union and intersect variations in enum and create a separate variable for it
+    if choice.upper() == "Y":
+        edit_sort_and_filter_settings()
 
     def compare_attribute(left: Recipe, right: Recipe, attribute: str) -> int:
         """
