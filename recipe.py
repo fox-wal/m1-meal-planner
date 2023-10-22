@@ -42,6 +42,7 @@ class Recipe:
         return self._tags
     
     # --- Formatting ---
+
     def format_title(self) -> str:
         return f"{self._name} | Preparation time: {format_time(self._prep_time)}"
     
@@ -59,3 +60,6 @@ class Recipe:
     
     def format_tags(self) -> str:
         return " ".join(self._tags())
+    
+    def __str__(self) -> str:
+        return self.format_title() + "\nIngredients\n" + self.format_ingredients() + "\nMethod\n" + self.format_method() + "\nTags: " + self.format_tags()
