@@ -24,10 +24,7 @@ I also write my commits in imperative, second-person present tense.
 |Tag|Meaning|Example|
 |---|---|---|
 |`feat`|Feature: new functionality introduced|`feat: add main menu`|
-|`refactor`|Improving code quality, changing things around|`refactor: move names and addresses to new class`|
-|||`refactor: rename 'my_file.py' to 'your_file.py'`|
-|`files`|A change to a non-source file|`files: add address file`|
-|||`files: correct faulty addresses`|
-|`chore`|A compiler/git -related commit|`chore: merge branch 'main' into 'my-feature'`|
-|||`chore: create .gitignore file`|
+|`refactor`|Improving code quality, changing things around|`refactor: move names and addresses to new class`<br>`refactor: rename 'my_file.py' to 'your_file.py'`|
+|`files`|A change to a non-source file|`files: add address file`<br>`files: correct faulty addresses`|
+|`chore`|A compiler/git -related commit|`chore: merge branch 'main' into 'my-feature'`<br>`chore: create .gitignore file`|
 |`docs`|Documentation|`docs: write docstrings for 'main.py'`|
